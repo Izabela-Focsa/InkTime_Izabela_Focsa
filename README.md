@@ -56,8 +56,7 @@ Componentele critice au fost selectate din biblioteca JLC Parts pentru a facilit
 ---
 
 ## 📸 Randări și Design Log
-![Top View PCB](Images/pcb_top.png)
-![Exploded View](Images/mechanical_exploded.png)
+To be added
 
 ## 📄 Licență
-Acest proiect este licențiat sub [GNU General Public License v3.0](LICENSE).
+Acest proiect este licențiat sub [GNU General Public License v3.0](Licence.txt).
