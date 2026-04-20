@@ -1,62 +1,218 @@
-# InkTime Smartwatch - Open Source Wearable (EVT Stage)
+# InkTime Smartwatch - Dispozitiv Wearable Open Source (Stadiu EVT)
 
-## Proiect Overview
-InkTime este un start-up care dezvoltă un smartwatch open-source și accesibil, bazat pe microcontrolerul **nRF52840**. Acest repository conține fișierele de proiectare hardware, fișierele pentru producție și modelarea mecanică necesare etapei de Engineering Validation (EVT).
+## 📌 Prezentare Generală
 
----
+**InkTime** este un smartwatch open-source, proiectat în jurul microcontrolerului **Nordic nRF52840**, cu accent pe consum redus de energie, conectivitate Bluetooth Low Energy și modularitate hardware.
 
-## 🏗️ Hardware Architecture
+Acest repository conține:
 
-### Diagrama Bloc
-Dispozitivul este construit în jurul SoC-ului nRF52840, gestionând comunicarea BLE, afișajul E-Paper și senzorii periferici prin interfețe digitale dedicate.
-
-
-
-[Image of nRF52840 block diagram]
-
-
-Dispozitivul integrează următoarele module principale:
-* **MCU:** Nordic nRF52840 (Bluetooth LE, procesare eficientă).
-* **Display:** E-Paper Display (conectat via SPI).
-* **Power Management:** Încărcare prin USB (VBUS/VUSB) via BQ25180 și regulator Buck-Boost RT6160A pentru 3.3V stabil.
-* **Senzori/Actuatori:** Accelerometru BMA423, Haptic Driver DRV2605, butoane de control.
-
-### Pinout Assignment (nRF52840)
-| Componentă | Pini nRF52840 | Interfață | Justificare |
-| :--- | :--- | :--- | :--- |
-| **Display (E-Paper)** | P0.28 (SCK), P0.29 (MOSI), P0.30 (CS), P0.31 (D/C), P0.02 (RST), P0.03 (BUSY) | SPI | [cite_start]Protocol de mare viteză necesar pentru transferul buffer-ului de imagine[cite: 1]. |
-| **Butoane** | P0.08 (UP), P0.11 (ENTER), P0.12 (DOWN) | GPIO (Input) | [cite_start]Configurați cu pull-up intern; permit navigarea în meniul ceasului[cite: 1]. |
-| **Vibrator (Haptic)** | P0.16 (HAPTIC_INT) | PWM/GPIO | [cite_start]Conectat la pinul IN/TRIG al driverului DRV2605 pentru controlul vibrațiilor[cite: 1]. |
-| **I2C Senzori** | P0.14 (SDA), P0.15 (SCL) | I2C | [cite_start]Bus comun utilizat pentru IMU (BMA423) și Fuel Gauge (MAX17048)[cite: 1]. |
+* designul PCB (Fusion Electronics)
+* fișierele pentru fabricație (Gerber, BOM, Pick & Place)
+* designul mecanic (Fusion 360)
+* integrarea sistemului pentru etapa EVT (Engineering Validation Test)
 
 ---
 
-## 📋 Bill of Materials (BOM)
-Componentele critice au fost selectate din biblioteca JLC Parts pentru a facilita producția în masă.
+## 🧩 Diagrama Bloc a Sistemului
 
-| Designator | Componentă | Capsulă | Descriere |
-| :--- | :--- | :--- | :--- |
-| **U1** | nRF52840 | aQFN73 | [cite_start]Microcontroler principal BLE[cite: 1]. |
-| **U2** | DRV2605L | VSSOP-10 | [cite_start]Haptic Driver[cite: 1]. |
-| **U3** | MAX17048 | TDFN-8 | [cite_start]Fuel Gauge (Monitorizare baterie)[cite: 1]. |
-| **IC1** | BQ25180 | WLCSP-8 | [cite_start]LiPo Charger Management[cite: 1]. |
-| **IC2** | BMA423 | LGA-12 | [cite_start]Accelerometru 3-axe[cite: 1]. |
-| **IC3** | RT6160A | WLCSP-15 | [cite_start]Convertor DC-DC Buck-Boost 3.3V[cite: 1]. |
-| **ANT1** | 2450AT18B100E | 1206 (SMD) | [cite_start]Antenă ceramică chip[cite: 1]. |
+Arhitectura sistemului este centrată în jurul microcontrolerului nRF52840, care gestionează comunicația, afișajul și senzorii.
+
+```
+        +----------------------+
+        |     Baterie LiPo     |
+        +----------+-----------+
+                   |
+            +------v------+
+            |  BQ25180    |  (Încărcare)
+            +------+------+
+                   |
+            +------v------+
+            |  RT6160A    |  (Regulator 3.3V)
+            +------+------+
+                   |
+         +---------v---------+
+         |    nRF52840 MCU   |
+         | (BLE + Procesare) |
+         +---+----+----+-----+
+             |    |    |
+        SPI  |    |    | I2C
+             |    |    |
+   +---------v+  |   +v-----------+
+   | Display   |  |   | BMA423 IMU|
+   | E-Paper   |  |   +------------+
+   +----------+  |
+                 |
+             +---v---------+
+             | MAX17048    |
+             | Fuel Gauge  |
+             +-------------+
+
+             +-------------+
+             | DRV2605L    |
+             | Vibrații    |
+             +-------------+
+
+             +-------------+
+             | Butoane     |
+             +-------------+
+```
 
 ---
 
-## ⚡ Detalii Tehnice & Constrângeri Design
-* **Reguli de Rutare:** Trasee de putere (VCC, 3V3) de **0.3mm**, semnale de date de **0.15mm**.
-* **EMI/RF:** Plan de masă continuu pe Bottom, decupaj sub antenă pentru a evita atenuarea semnalului BLE.
-* **Decuplare:** Condensatoarele de 100nF (capsulă 0201) sunt plasate la <1mm de pinii de alimentare ai IC-urilor.
-* **Mecanică:** Design compact, componente montate exclusiv pe layer-ul **TOP**.
-* **Consum:** Bateria LiPo este monitorizată prin Fuel Gauge pentru a optimiza modurile de sleep ale nRF52840.
+## 🔌 Funcționalitatea Hardware (Detaliat)
+
+### 🧠 Microcontroler – nRF52840
+
+* ARM Cortex-M4F @ 64 MHz
+* Bluetooth Low Energy 5.0 integrat
+* Consum foarte redus în mod sleep
+
+Roluri principale:
+
+* procesare date senzori
+* control display
+* comunicare BLE
 
 ---
 
-## 📸 Randări și Design Log
-To be added
+### 📺 Display – E-Paper
+
+* Interfață: **SPI**
+* Consum foarte mic
+* Ideal pentru afișare permanentă
+
+---
+
+### ⚡ Managementul Energiei
+
+#### 🔋 BQ25180
+
+* gestionează încărcarea bateriei LiPo
+* alimentare prin USB (VBUS)
+
+#### 🔌 RT6160A
+
+* convertor Buck-Boost
+* furnizează **3.3V stabil**
+* permite funcționarea chiar și la tensiuni scăzute ale bateriei
+
+---
+
+### 📊 Senzori și Actuatori
+
+#### BMA423 (Accelerometru)
+
+* interfață I2C
+* detectare mișcare / pași
+
+#### MAX17048 (Fuel Gauge)
+
+* monitorizare nivel baterie
+* consum foarte redus
+
+#### DRV2605L (Driver Haptic)
+
+* controlează motorul de vibrații
+* suportă feedback haptic avansat
+
+---
+
+### 🎮 Input Utilizator
+
+* 3 butoane: UP / ENTER / DOWN
+* conectate ca GPIO cu rezistențe pull-up interne
+
+---
+
+## 🔗 Mapare Pini nRF52840
+
+| Componentă          | Pini                                                                          | Interfață | Motiv                  |
+| ------------------- | ----------------------------------------------------------------------------- | --------- | ---------------------- |
+| **Display E-Paper** | P0.28 (SCK), P0.29 (MOSI), P0.30 (CS), P0.31 (D/C), P0.02 (RST), P0.03 (BUSY) | SPI       | Transfer rapid de date |
+| **Butoane**         | P0.08, P0.11, P0.12                                                           | GPIO      | Input simplu           |
+| **Haptic Driver**   | P0.16                                                                         | GPIO/PWM  | Control vibrații       |
+| **Senzori I2C**     | P0.14 (SDA), P0.15 (SCL)                                                      | I2C       | Magistrală comună      |
+| **Fuel Gauge**      | I2C                                                                           | I2C       | Monitorizare baterie   |
+
+---
+
+## 📦 Bill of Materials (BOM)
+
+| Ref  | Componentă | Link JLCPCB                                             | Datasheet                                                                                      |
+| ---- | ---------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| U1   | nRF52840   | https://jlcpcb.com/partdetail/Nordic-nRF52840           | https://infocenter.nordicsemi.com/pdf/nRF52840_PS_v1.1.pdf                                     |
+| U2   | DRV2605L   | https://jlcpcb.com/partdetail/TexasInstruments-DRV2605L | https://www.ti.com/lit/ds/symlink/drv2605l.pdf                                                 |
+| U3   | MAX17048   | https://jlcpcb.com/partdetail/MaximIntegrated-MAX17048  | https://datasheets.maximintegrated.com/en/ds/MAX17048-MAX17049.pdf                             |
+| IC1  | BQ25180    | https://jlcpcb.com/partdetail/TexasInstruments-BQ25180  | https://www.ti.com/lit/ds/symlink/bq25180.pdf                                                  |
+| IC2  | BMA423     | https://jlcpcb.com/partdetail/Bosch-BMA423              | https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bma423-ds000.pdf |
+| IC3  | RT6160A    | https://jlcpcb.com/partdetail/Richtek-RT6160A           | https://www.richtek.com/assets/product_file/RT6160A/DS6160A-00.pdf                             |
+| ANT1 | Antenă BLE | https://jlcpcb.com                                      | Datasheet producător                                                                           |
+
+---
+
+## ⚙️ Constrângeri și Decizii de Design
+
+### PCB
+
+* trasee alimentare: **0.3 mm**
+* trasee semnal: **0.15 mm**
+* PCB pe 2 straturi
+
+### RF
+
+* plan de masă continuu
+* zonă fără cupru sub antenă
+
+### Decuplare
+
+* condensatori 100nF la <1mm de fiecare IC
+
+### Mecanic
+
+* toate componentele pe **TOP layer**
+* design compact pentru carcasă
+
+---
+
+## 🔋 Estimare Consum Energetic
+
+| Mod                   | Consum    |
+| --------------------- | --------- |
+| Activ (BLE + display) | ~15–20 mA |
+| Idle                  | ~2–5 mA   |
+| Sleep                 | <10 µA    |
+
+Baterie: ~200–300 mAh
+Autonomie estimată: **2–5 zile**
+
+---
+
+## 🖼️ Randări și Design
+
+Randările dispozitivului, ale PCB-ului și integrarea în carcasă pot fi găsite în folderul dedicat din repository:
+
+👉 [Images Folder](./Images)
+
+---
+
+## 🛠️ Fișiere pentru Fabricație
+
+* Gerber
+* Drill files
+* Pick & Place (.csv)
+* BOM (.csv)
+
+---
+
+## 📘 Design Log
+
+* realizare schemă electronică
+* rutare PCB completă
+* verificare DRC
+* integrare mecanică finală
+
+---
 
 ## 📄 Licență
-Acest proiect este licențiat sub [GNU General Public License v3.0](Licence.txt).
+
+Proiectul este licențiat sub **GNU General Public License v3.0**.
