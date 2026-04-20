@@ -146,7 +146,7 @@ Roluri principale:
 | IC1  | BQ25180    | https://jlcpcb.com/partdetail/TexasInstruments-BQ25180  | https://www.ti.com/lit/ds/symlink/bq25180.pdf                                                  |
 | IC2  | BMA423     | https://jlcpcb.com/partdetail/Bosch-BMA423              | https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bma423-ds000.pdf |
 | IC3  | RT6160A    | https://jlcpcb.com/partdetail/Richtek-RT6160A           | https://www.richtek.com/assets/product_file/RT6160A/DS6160A-00.pdf                             |
-| ANT1 | Antenă BLE | https://jlcpcb.com                                      | Datasheet producător                                                                           |
+| ANT1 | Antenă BLE | https://jlcpcb.com                                      |                                                                          |
 
 ---
 
